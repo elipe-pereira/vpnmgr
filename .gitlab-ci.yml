@@ -1,0 +1,22 @@
+stages:
+  - deploy-teste
+  - deploy-prod
+
+Deploy teste:
+  stage: deploy-teste
+
+  script:
+    - echo "Ok"
+
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+
+Deploy prod:
+  stage: deploy-prod
+
+  script:
+    - echo "ok"
+
+  rules:
+    - if: $CI_COMMIT_TAG
+
