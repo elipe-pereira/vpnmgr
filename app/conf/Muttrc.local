@@ -1,0 +1,10 @@
+set use_from=yes
+set mbox=+Inbox
+set spoolfile=+Inbox
+set envelope_from_address="vpn@elipereira.com.br"
+set from="vpn@elipereira.com.br"
+set force_name=yes
+set realname="VPN"
+set my_user=vpn@elipereira.com.br
+set my_pass='9gRHEaA$gO68E(Fb'
+set smtp_url=smtp://$my_user:$my_pass@mail.elipereira.com.br

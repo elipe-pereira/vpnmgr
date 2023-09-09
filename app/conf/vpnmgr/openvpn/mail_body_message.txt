@@ -1,0 +1,9 @@
+"Olá, Segue em anexo o seu certificado VPN.
+
+Para usá lo, você precisa baixar o cliente OpenVPN disponível
+em https://openvpn.net/community-downloads/.
+
+Escolha a versão do seu sistema operacional e efetue o download.
+Após a instalação do cliente OpenVPN, copie os arquivos da pasta compactada em anexo e cole em
+C:\Arquivos de Programas\OpenVPN\config. O caminho pode ser algo um pouco diferente
+dependendo de onde você instalou o programa."
