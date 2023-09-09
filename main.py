@@ -14,6 +14,7 @@ class Main:
 
     def run(self):
         self.vpn_manager = VPNManager()
+        self.vpn_manager.set_base_path(self.base_path)
         self.vpn_manager.exec()
 
 

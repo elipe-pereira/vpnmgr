@@ -1,12 +1,104 @@
+.create-deb-package: &create-deb-package
+  - echo "Criando pasta DEBIAN"
+  - ssh "$ssh_access" "! test -d /tmp/$package_name/DEBIAN || rm -rf /tmp/$package_name"
+  - ssh "$ssh_access" "mkdir /tmp/$package_name"
+  - ssh "$ssh_access" "mkdir /tmp/$package_name/DEBIAN"
+
+  - echo "Adicionado parametros essenciais ao arquivo control"
+  - ssh "$ssh_access" "echo Section:$section >> /tmp/$package_name/DEBIAN/control"
+  - ssh "$ssh_access" "echo Package:$package_name >> /tmp/$package_name/DEBIAN/control"
+  - ssh "$ssh_access" "echo Priority:$priority >> /tmp/$package_name/DEBIAN/control"
+  - ssh "$ssh_access" "echo Version:$version >> /tmp/$package_name/DEBIAN/control"
+  - ssh "$ssh_access" "echo Architecture:$architecture >> /tmp/$package_name/DEBIAN/control"
+  - ssh "$ssh_access" "echo Maintainer:$maintainer >> /tmp/$package_name/DEBIAN/control"
+  - ssh "$ssh_access" "echo Depends:$depends >> /tmp/$package_name/DEBIAN/control"
+  - ssh "$ssh_access" "echo Description:$description >> /tmp/$package_name/DEBIAN/control"
+
+  - echo "Criando arquivo preinst localmente"
+  - echo "$cmd_preinst" >> /tmp/preinst-"$app_name"
+
+  - echo "Criando postinst localmente"
+  - echo "$cmd_postinst" >> /tmp/postinst-"$app_name"
+
+  - echo "Criando arquivo postrm localmente"
+  - echo "$cmd_postrm" >> /tmp/postrm-"$app_name"
+
+  - echo "Copiando arquivos"
+  - scp /tmp/preinst-"$app_name" "$ssh_access":/tmp/"$package_name"/DEBIAN/preinst
+  - scp /tmp/postinst-"$app_name" "$ssh_access":/tmp/"$package_name"/DEBIAN/postinst
+  - scp /tmp/postrm-"$app_name" "$ssh_access":/tmp/"$package_name"/DEBIAN/postrm
+
+  - echo "Removendo arquivos"
+  - rm /tmp/preinst-"$app_name"
+  - rm /tmp/postinst-"$app_name"
+  - rm /tmp/postrm-"$app_name"
+
+  - echo "Dando permissão de execução aos arquivos dentro da pasta DEBIAN"
+  - ssh "$ssh_access" "chmod +x /tmp/$package_name/DEBIAN/*"
+
+  - echo "Criando pasta /usr/share"
+  - ssh "$ssh_access" "mkdir -p /tmp/$package_name/usr/share"
+
+  - echo "Criando pasta temporária no servidor"
+  - ssh "$ssh_access" "mkdir /tmp/"$app_name"-tmp"
+
+  - echo "Enviando o código para pasta temporária no servidor"
+  - rsync -av * "$ssh_access":/tmp/"$app_name"-tmp
+
+  - echo "Acessando pasta e compilando código"
+  - ssh "$ssh_access" "cd /tmp/"$app_name"-tmp && ./pyinstaller.sh"
+
+  - echo "Copiando arquivos"
+  - ssh "$ssh_access" "cd /tmp/"$app_name"-tmp && cp -av $app_name /tmp/$package_name/usr/share"
+
+  - echo "Apagando pasta temporária"
+  - ssh "$ssh_access" "test -d /tmp/"$app_name"-tmp && rm -rf /tmp/"$app_name"-tmp"
+
+
+  - echo "Deixando o usuário root como dono dos arquivos"
+  - ssh "$ssh_access" "chown -R root:root /tmp/$package_name"
+
+  - echo "Efetuando o empacotamento"
+  - ssh "$ssh_access" "dpkg-deb -Zxz -b /tmp/$package_name /tmp"
+
+  - echo "Enviando o arquivo empacotado para o repositório"
+  - ssh "$ssh_access" "reprepro -b $repo_path/$distro includedeb $release /tmp/'$package_name'_'$version'_'$architecture'.deb"
+  - echo "Limpando arquivos"
+  - ssh "$ssh_access" "test -d /tmp/$package_name/DEBIAN && rm -rf /tmp/$package_name*"
+
 stages:
   - deploy-teste
   - deploy-prod
 
+variables:
+  ssh_user: root
+  server: valentino
+  ssh_access: "$ssh_user@$server"
+  app_name: vpnmgr
+  distro: debian
+  release: hanokh
+  package_name: hanokh-vpnmgr
+  priority: optional
+  architecture: amd64
+  maintainer: "Hanokh Software Labs"
+  depends: "openvpn"
+  description: "Gerenciador de instâncias e certificado openvpn"
+  cmd_preinst: "#!/bin/bash \n
+    "
+  cmd_postinst: "#!/bin/bash \n
+  "
+  cmd_postrm: "#!/bin/bash \n
+  "
+
 Deploy teste:
   stage: deploy-teste
 
+  variables:
+    repo_path: /srv/repo/testing
+    version: "0.0.1
+
   script:
-    - echo "Ok"
+    - *create-deb-package
 
   rules:
     - if: $CI_COMMIT_BRANCH == 'main'
@@ -14,9 +106,12 @@ Deploy teste:
 Deploy prod:
   stage: deploy-prod
 
+  variables:
+    repo_path: /srv/repo/packages
+    version: $CI_COMMIT_TAG
+
   script:
-    - echo "ok"
+    - *create-deb-package
 
   rules:
     - if: $CI_COMMIT_TAG
-
