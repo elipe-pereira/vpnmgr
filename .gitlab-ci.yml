@@ -86,16 +86,16 @@ variables:
   cmd_preinst: "#!/bin/bash \n
     "
   cmd_postinst: "#!/bin/bash \n
-  "
+    "
   cmd_postrm: "#!/bin/bash \n
-  "
+    "
 
 Deploy teste:
   stage: deploy-teste
 
   variables:
     repo_path: /srv/repo/testing
-    version: "0.0.1
+    version: "0.0.1"
 
   script:
     - *create-deb-package
