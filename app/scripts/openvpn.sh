@@ -193,7 +193,7 @@ function create_folder_ta_key(){
 }
 
 function create_ta_key(){
-  test -f "${base_instance_ca}/ta/ta.key" || ${openvpn} --genkey --secret "${base_instance_ca}/ta/ta.key"
+  test -f "${base_instance_ca}/ta/ta.key" || ${openvpn} --genkey secret "${base_instance_ca}/ta/ta.key"
 }
 
 function test_port(){
@@ -329,8 +329,8 @@ function create_file_service_systemd(){
         echo "KillMode=mixed";
         echo "Type=forking";
         echo "ExecStart=/usr/sbin/openvpn --daemon server-%i \
-        --status /run/openvpn/%i.status 10 --cd /etc/openvpn \
-        --config /etc/openvpn/server/%i.conf \
+        --status /run/openvpn/%i.status 10 --cd ${base_instance_ca} \
+        --config ${base_instance_ca}/%i.conf \
         --writepid /run/openvpn/%i.pid";
         echo "PIDFile=/run/openvpn/%i.pid";
         echo "ExecReload=/bin/kill -HUP $MAINPID";
@@ -527,7 +527,7 @@ function client_openvpn(){
 
     ask_user "Informe o nome do certificado" client_name
 
-    base_instance_ca="${base_openvpn}"/server/"${instance_ca}"
+    set_base_instance_ca
     data=$(date +'%s' | tr -d '\n')
 
     create_key_client "${client_name}"
@@ -561,7 +561,7 @@ function list_certificates_openvpn (){
         fi
     done
 
-    base_instance_ca="${base_openvpn}"/system/"${user}"/server/"${instance_ca}"
+    set_base_instance_ca
     index="${base_instance_ca}"/index_certificates.txt
 
     printf "%20b\t\t\t%20b\t\t\t%20b\n" "Nome do certificado" "Data de Criação" "Status"
@@ -580,8 +580,7 @@ function list_revogated_openvpn (){
             echo "Essa instância não existe"
         fi
     done
-
-    base_instance_ca=${base_openvpn}/system/"${user}"/server/${instance_ca}
+    set_base_instance_ca
     folder_certificates="${base_instance_ca}"/certificates
     index="${folder_certificates}"/index_revogated.txt
 
@@ -591,7 +590,7 @@ function list_revogated_openvpn (){
 }
 
 function move_cert_client_to_revogated(){
-    base_instance_ca="${base_openvpn}/system/${user}/server/${instance_ca}"
+    set_base_instance_ca
     folder_certificates="${base_instance_ca}/certificates"
     folder_revogated="${folder_certificates}/revogated"
     data_index_certificate=$(grep -w "${client_name}" "${base_instance_ca}"/index_certificates.txt)
