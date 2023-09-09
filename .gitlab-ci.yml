@@ -40,13 +40,14 @@
   - ssh "$ssh_access" "mkdir -p /tmp/$package_name/usr/share"
 
   - echo "Criando pasta temporária no servidor"
-  - ssh "$ssh_access" "mkdir /tmp/"$app_name"-tmp"
+  - ssh "$ssh_access" "mkdir /tmp/${app_name}-tmp"
 
   - echo "Enviando o código para pasta temporária no servidor"
-  - rsync -av * "$ssh_access":/tmp/"$app_name"-tmp
+  - rsync -av * "$ssh_access":/tmp/"${app_name}"-tmp
 
   - echo "Acessando pasta e compilando código"
-  - ssh "$ssh_access" "cd /tmp/"$app_name"-tmp && ./pyinstaller.sh"
+  - ssh "$ssh_access" "chmod +x /tmp/${app_name}-tmp/pyinstaller.sh"
+  - ssh "$ssh_access" "cd /tmp/${app_name}-tmp && ./pyinstaller.sh"
 
   - echo "Copiando arquivos"
   - ssh "$ssh_access" "cd /tmp/"$app_name"-tmp && cp -av $app_name /tmp/$package_name/usr/share"
@@ -77,11 +78,12 @@ variables:
   app_name: vpnmgr
   distro: debian
   release: hanokh
+  section: Misc
   package_name: hanokh-vpnmgr
   priority: optional
   architecture: amd64
   maintainer: "Hanokh Software Labs"
-  depends: "openvpn"
+  depends: "openvpn,zip,mutt"
   description: "Gerenciador de instâncias e certificado openvpn"
   cmd_preinst: "#!/bin/bash \n
     "
